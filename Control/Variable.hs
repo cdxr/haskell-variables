@@ -1,7 +1,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Control.Concurrent.State where
+module Control.Variable where
 
 import Control.Monad
 import Control.Monad.ST
