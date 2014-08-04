@@ -19,7 +19,8 @@ import Control.Concurrent.MVar
 import Control.Concurrent.STM
 
 
-
+-- | The class @Variable m v@ defines operations for reading and writing to
+-- a variable of type @v@ in the monad @m@.
 class (Monad m) => Variable m v | v -> m where
     writeVar :: v s -> s -> m ()
     writeVar v s = modifyVar v $ const ((), s)
@@ -38,7 +39,16 @@ class (Monad m) => Variable m v | v -> m where
         let (a, s) = f s0
         in s `seq` (a, s)
 
+    {-# MINIMAL writeVar, readVar | modifyVar #-}
 
+
+-- | The class @Locked m v@ is defined for instances of @Variable m v@ that
+-- admit a proper definition of @atomicVar@. An instance of @Locked IO v@
+-- is only correct if @v@ implements proper locking behavior, e.g. @MVar@.
+--
+-- This class is trivially satisfied by any instance @Variable STM v@ or
+-- @Variable ST v@.
+--
 class (Variable m v) => Locked m v | v -> m where
     atomicVar  :: v s -> (s -> m (a, s)) -> m a
     atomicVar v f = do
@@ -51,7 +61,7 @@ class (Variable m v) => Locked m v | v -> m where
         (a, s) <- f s0
         return $! seq s (a, s)
 
-
+-- | A default definition of @modifyVar@ for instances of @Locked m v@.
 modifyVarDefault :: (Locked m v) => v s -> (s -> (a, s)) -> m a
 modifyVarDefault v f = atomicVar v (return . f)
 
